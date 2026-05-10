@@ -3,141 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
   <title>Master Financial Planner</title>
-
   <style>
     :root {
-      --bg: #f7f8fc;
-      --card: #ffffff;
-      --text: #1f2937;
+      --bg:#f7f8fc; --card:#fff; --text:#111827; --border:#e5e7eb;
     }
-
     body.dark {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --text: #f8fafc;
+      --bg:#0f172a; --card:#1e293b; --text:#f8fafc; --border:#334155;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { box-sizing:border-box; margin:0; padding:0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 16px;
+      font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+      background:var(--bg); color:var(--text); padding:16px;
     }
-
     #themeToggle {
-      position: fixed;
-      top: max(12px, env(safe-area-inset-top));
-      right: 12px;
-      z-index: 9999;
-      width: 48px;
-      height: 48px;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 20px;
+      position:fixed; top:max(12px, env(safe-area-inset-top)); right:12px;
+      width:48px; height:48px; border:none; border-radius:50%; cursor:pointer; z-index:9999;
     }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding-top: 60px;
-      display: grid;
-      gap: 16px;
+    .container { max-width:900px; margin:auto; padding-top:64px; display:grid; gap:16px; }
+    .card { background:var(--card); border-radius:20px; padding:20px; border:1px solid var(--border); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:12px; }
+    input, select, button {
+      width:100%; padding:12px; border-radius:12px; border:1px solid var(--border);
     }
-
-    .card {
-      background: var(--card);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.08);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-    }
-
-    table {
-      width: 100%;
-      margin-top: 12px;
-      border-collapse: collapse;
-    }
-
-    td {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-    }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    td, th { padding:8px; border-bottom:1px solid var(--border); }
+    .summary { margin-top:10px; font-size:14px; }
+    .danger { cursor:pointer; }
   </style>
 </head>
 <body>
-
 <button id="themeToggle" onclick="toggleTheme()">🌙</button>
 
 <div class="container">
-
   <div class="card">
-    <h1>Master Financial Planner</h1>
+    <h2>Income & Allocation</h2>
     <div class="grid">
-      <input id="income" type="number" placeholder="Monthly Income" />
+      <input id="income" type="number" placeholder="Monthly Income">
+      <input id="needsPct" type="number" placeholder="Needs %">
+      <input id="wantsPct" type="number" placeholder="Wants %">
+      <input id="savingsPct" type="number" placeholder="Savings %">
+      <input id="investPct" type="number" placeholder="Investments %">
       <button onclick="calculateAllocation()">Calculate</button>
     </div>
-    <p id="allocation"></p>
-  </div>
-
-  <div class="card">
-    <h2>Budget Tracker</h2>
-    <div class="grid">
-      <input id="budgetCat" placeholder="Category" />
-      <input id="budgetAmt" type="number" placeholder="Amount" />
-      <button onclick="addBudget()">Add</button>
-    </div>
-    <table><tbody id="budgetList"></tbody></table>
+    <div class="summary" id="allocationSummary"></div>
   </div>
 
   <div class="card">
     <h2>Expense Tracker</h2>
     <div class="grid">
-      <input id="expenseCat" placeholder="Category" />
-      <input id="expenseAmt" type="number" placeholder="Amount" />
-      <button onclick="addExpense()">Add</button>
+      <select id="expenseCategory">
+        <option value="Food">Food</option>
+        <option value="Groceries">Groceries</option>
+        <option value="Transport">Transport</option>
+        <option value="Utilities">Utilities</option>
+        <option value="Rent">Rent</option>
+        <option value="Dining Out">Dining Out</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Entertainment">Entertainment</option>
+      </select>
+      <input id="expenseAmount" type="number" placeholder="Amount">
+      <input id="expenseDesc" placeholder="Description">
+      <button onclick="addExpense()">Add Expense</button>
     </div>
-    <table><tbody id="expenseList"></tbody></table>
-    <p id="expenseTotal"></p>
-  </div>
-
-  <div class="card">
-    <h2>Bill Due Reminders</h2>
-    <div class="grid">
-      <input id="billName" placeholder="Bill" />
-      <input id="billDue" placeholder="Due Date" />
-      <button onclick="addBill()">Add</button>
+    <table>
+      <thead><tr><th>Category</th><th>Amount</th><th>Description</th><th>Bucket</th><th></th></tr></thead>
+      <tbody id="expenseList"></tbody>
+    </table>
+    <div class="summary" id="bucketSummary"></div>
+        <button onclick="exportPDF()">Save Monthly PDF</button>
     </div>
-    <table><tbody id="billList"></tbody></table>
-  </div>
-
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-let budgets = JSON.parse(localStorage.getItem('budgets') || '[]');
 let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-let bills = JSON.parse(localStorage.getItem('bills') || '[]');
+let allocation = JSON.parse(localStorage.getItem('allocation') || '{}');
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
-}
+const categoryMap = {
+  Food:'needs', Groceries:'needs', Transport:'needs', Utilities:'needs', Rent:'needs',
+  'Dining Out':'wants', Shopping:'wants', Entertainment:'wants'
+};
 
 function toggleTheme() {
   document.body.classList.toggle('dark');
@@ -148,47 +94,91 @@ function toggleTheme() {
 
 function calculateAllocation() {
   const income = Number(document.getElementById('income').value || 0);
-  allocation.textContent = `Needs ${income*0.5} | Wants ${income*0.3} | Savings ${income*0.2}`;
-}
+  const needs = Number(needsPct.value || 0);
+  const wants = Number(wantsPct.value || 0);
+  const savings = Number(savingsPct.value || 0);
+  const invest = Number(investPct.value || 0);
 
-function addBudget() {
-  const c = budgetCat.value;
-  const a = Number(budgetAmt.value);
-  if (!c || !a) return;
-  budgets.push({c,a});
-  localStorage.setItem('budgets', JSON.stringify(budgets));
-  renderBudgets();
+  if ((needs+wants+savings+invest) !== 100) {
+    allocationSummary.textContent = 'Allocation must total 100%';
+    return;
+  }
+
+  allocation = {
+    income,
+    needs: income * needs / 100,
+    wants: income * wants / 100,
+    savings: income * savings / 100,
+    invest: income * invest / 100
+  };
+
+  localStorage.setItem('allocation', JSON.stringify(allocation));
+  renderSummary();
 }
 
 function addExpense() {
-  const c = expenseCat.value;
-  const a = Number(expenseAmt.value);
-  if (!c || !a) return;
-  expenses.push({c,a});
+  const category = expenseCategory.value;
+  const amount = Number(expenseAmount.value || 0);
+  if (!amount) return;
+
+  const description = expenseDesc.value;
+
+  expenses.push({
+    category,
+    description,
+    amount,
+    bucket: categoryMap[category]
+  });
+
   localStorage.setItem('expenses', JSON.stringify(expenses));
   renderExpenses();
+  renderSummary();
 }
 
-function addBill() {
-  const n = billName.value;
-  const d = billDue.value;
-  if (!n || !d) return;
-  bills.push({n,d});
-  localStorage.setItem('bills', JSON.stringify(bills));
-  renderBills();
-}
-
-function renderBudgets() {
-  budgetList.innerHTML = budgets.map(x => `<tr><td>${x.c}</td><td>${x.a}</td></tr>`).join('');
+function deleteExpense(index) {
+  expenses.splice(index, 1);
+  localStorage.setItem('expenses', JSON.stringify(expenses));
+  renderExpenses();
+  renderSummary();
 }
 
 function renderExpenses() {
-  expenseList.innerHTML = expenses.map(x => `<tr><td>${x.c}</td><td>${x.a}</td></tr>`).join('');
-  expenseTotal.textContent = 'Total: ' + expenses.reduce((s,x)=>s+x.a,0);
+  expenseList.innerHTML = expenses.map((x,i) =>
+    `<tr>
+      <td>${x.category}</td>
+      <td>${x.amount}</td>
+      <td>${x.description || ''}</td>
+      <td>${x.bucket}</td>
+      <td><span class="danger" onclick="deleteExpense(${i})">🗑</span></td>
+    </tr>`
+  ).join('');
 }
 
-function renderBills() {
-  billList.innerHTML = bills.map(x => `<tr><td>${x.n}</td><td>${x.d}</td></tr>`).join('');
+function renderSummary() {
+  const needsSpent = expenses.filter(x=>x.bucket==='needs').reduce((s,x)=>s+x.amount,0);
+  const wantsSpent = expenses.filter(x=>x.bucket==='wants').reduce((s,x)=>s+x.amount,0);
+
+  allocationSummary.textContent =
+    `Needs ${allocation.needs||0} | Wants ${allocation.wants||0} | Savings ${allocation.savings||0} | Invest ${allocation.invest||0}`;
+
+  bucketSummary.textContent =
+    `Needs Remaining: ${(allocation.needs||0)-needsSpent} | Wants Remaining: ${(allocation.wants||0)-wantsSpent}`;
+}
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text('Monthly Finance Report', 20, 20);
+
+  let y = 35;
+  expenses.forEach((x, i) => {
+    doc.text(`${i+1}. ${x.category} - ${x.amount} - ${x.description || ''}`, 20, y);
+    y += 10;
+  });
+
+  const month = new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  doc.save(`Finance-${month}.pdf`);
 }
 
 window.onload = () => {
@@ -196,11 +186,9 @@ window.onload = () => {
     document.body.classList.add('dark');
     themeToggle.textContent = '☀️';
   }
-  renderBudgets();
   renderExpenses();
-  renderBills();
+  renderSummary();
 };
 </script>
-
 </body>
 </html>
