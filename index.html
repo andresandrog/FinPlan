@@ -1,15 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
-
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-512.png">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
   <title>Master Financial Planner</title>
 
   <style>
@@ -25,18 +19,13 @@
       --text: #f8fafc;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       padding: 16px;
-      transition: 0.25s ease;
     }
 
     #themeToggle {
@@ -49,31 +38,13 @@
       border: none;
       border-radius: 50%;
       cursor: pointer;
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      -webkit-tap-highlight-color: transparent;
       font-size: 20px;
-
-      position: fixed;
-      top: max(12px, env(safe-area-inset-top));
-      right: 12px;
-      z-index: 9999;
-      width: 48px;
-      height: 48px;
-      border: none;
-      border-radius: 50%;
-      font-size: 20px;
-      cursor: pointer;
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
     }
 
     .container {
       max-width: 900px;
       margin: auto;
-      padding-top: 56px;
+      padding-top: 60px;
       display: grid;
       gap: 16px;
     }
@@ -82,129 +53,154 @@
       background: var(--card);
       border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
     }
 
-    h1 {
-      margin-bottom: 12px;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 12px;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
     }
   </style>
 </head>
 <body>
 
-  <button id="themeToggle" onclick="toggleTheme()">🌙</button>
+<button id="themeToggle" onclick="toggleTheme()">🌙</button>
 
-  <div class="container">
-    <div class="card">
-      <h1>Master Financial Planner</h1>
-      <p>Budgets • Bills • Expenses • Goals • Analytics</p>
-    </div>
+<div class="container">
 
-    <div class="card">
-      <h2>Income Allocation</h2>
-      <p>50% Needs • 30% Wants • 20% Savings</p>
+  <div class="card">
+    <h1>Master Financial Planner</h1>
+    <div class="grid">
+      <input id="income" type="number" placeholder="Monthly Income" />
+      <button onclick="calculateAllocation()">Calculate</button>
     </div>
-
-    <div class="card">
-      <h2>Monthly Budget</h2>
-      <p>Add categories like Food, Transport, Shopping, Utilities.</p>
-    </div>
-
-    <div class="card">
-      <h2>Expense Tracker</h2>
-      <p>Track daily spending and monthly totals.</p>
-    </div>
-
-    <div class="card">
-      <h2>Bill Due Dates</h2>
-      <p>Rent • Credit Card • Insurance • Internet</p>
-    </div>
-
-    <div class="card">
-      <h2>Savings Goals</h2>
-      <p>Emergency Fund • Vacation • Business Capital</p>
-    </div>
-
-    <div class="card">
-      <h2>Subscriptions</h2>
-      <p>Netflix • Spotify • iCloud • Apps</p>
-    </div>
+    <p id="allocation"></p>
   </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
-    }
+  <div class="card">
+    <h2>Budget Tracker</h2>
+    <div class="grid">
+      <input id="budgetCat" placeholder="Category" />
+      <input id="budgetAmt" type="number" placeholder="Amount" />
+      <button onclick="addBudget()">Add</button>
+    </div>
+    <table><tbody id="budgetList"></tbody></table>
+  </div>
 
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
-      const isDark = document.body.classList.contains('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
-    }
+  <div class="card">
+    <h2>Expense Tracker</h2>
+    <div class="grid">
+      <input id="expenseCat" placeholder="Category" />
+      <input id="expenseAmt" type="number" placeholder="Amount" />
+      <button onclick="addExpense()">Add</button>
+    </div>
+    <table><tbody id="expenseList"></tbody></table>
+    <p id="expenseTotal"></p>
+  </div>
 
-    function oldToggleThe
-      document.body.classList.toggle('dark');
+  <div class="card">
+    <h2>Bill Due Reminders</h2>
+    <div class="grid">
+      <input id="billName" placeholder="Bill" />
+      <input id="billDue" placeholder="Due Date" />
+      <button onclick="addBill()">Add</button>
+    </div>
+    <table><tbody id="billList"></tbody></table>
+  </div>
 
-      const isDark = document.body.classList.contains('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+</div>
 
-      document.getElementById('themeToggle').innerHTML =
-        isDark ? '☀️' : '🌙';
-    }
+<script>
+let budgets = JSON.parse(localStorage.getItem('budgets') || '[]');
+let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+let bills = JSON.parse(localStorage.getItem('bills') || '[]');
 
-    window.onload = () => {
-      const savedTheme = localStorage.getItem('theme');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
 
-      if(savedTheme === 'dark') {
-        document.body.classList.add('dark');
-        document.getElementById('themeToggle').innerHTML = '☀️';
-      }
-    }
-  </script>
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  const dark = document.body.classList.contains('dark');
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+  themeToggle.textContent = dark ? '☀️' : '🌙';
+}
+
+function calculateAllocation() {
+  const income = Number(document.getElementById('income').value || 0);
+  allocation.textContent = `Needs ${income*0.5} | Wants ${income*0.3} | Savings ${income*0.2}`;
+}
+
+function addBudget() {
+  const c = budgetCat.value;
+  const a = Number(budgetAmt.value);
+  if (!c || !a) return;
+  budgets.push({c,a});
+  localStorage.setItem('budgets', JSON.stringify(budgets));
+  renderBudgets();
+}
+
+function addExpense() {
+  const c = expenseCat.value;
+  const a = Number(expenseAmt.value);
+  if (!c || !a) return;
+  expenses.push({c,a});
+  localStorage.setItem('expenses', JSON.stringify(expenses));
+  renderExpenses();
+}
+
+function addBill() {
+  const n = billName.value;
+  const d = billDue.value;
+  if (!n || !d) return;
+  bills.push({n,d});
+  localStorage.setItem('bills', JSON.stringify(bills));
+  renderBills();
+}
+
+function renderBudgets() {
+  budgetList.innerHTML = budgets.map(x => `<tr><td>${x.c}</td><td>${x.a}</td></tr>`).join('');
+}
+
+function renderExpenses() {
+  expenseList.innerHTML = expenses.map(x => `<tr><td>${x.c}</td><td>${x.a}</td></tr>`).join('');
+  expenseTotal.textContent = 'Total: ' + expenses.reduce((s,x)=>s+x.a,0);
+}
+
+function renderBills() {
+  billList.innerHTML = bills.map(x => `<tr><td>${x.n}</td><td>${x.d}</td></tr>`).join('');
+}
+
+window.onload = () => {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark');
+    themeToggle.textContent = '☀️';
+  }
+  renderBudgets();
+  renderExpenses();
+  renderBills();
+};
+</script>
 
 </body>
 </html>
-```
-
----
-
-## sw.js
-
-```javascript
-const CACHE_NAME = 'finance-planner-v2';
-
-const filesToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(filesToCache))
-  );
-});
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    )
-  );
-});
-```
