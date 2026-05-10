@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Finance Planner">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-512.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Master Financial Planner</title>
+  <meta name="theme-color" content="#0f172a">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+    :root {
+      --bg: #f7f8fc;
+      --card: white;
+      --text: #1f2937;
+    }
+    body.dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    h1, h2 { margin-bottom: 12px; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.1rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    input, button, select {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+    }
+    button {
+      border: none;
+      background: #111827;
+      color: white;
+      cursor: pointer;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .pill {
+      background: #f3f4f6;
+      border-radius: 14px;
+      padding: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.95rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <button id="themeToggle" onclick="toggleTheme()" style="position:fixed;top:12px;right:12px;z-index:1000;padding:10px 14px;border-radius:12px;">🌙</button>
+  <div class="container">
+    <div class="card">
+      <h1>Master Financial Planner</h1>
+      <div class="grid">
+        <input type="number" id="income" placeholder="Monthly Income" />
+        <button onclick="calculateAllocation()">Calculate Allocation</button>
+      </div>
+      <div class="summary" id="allocation"></div>
+    </div>
+
+    <div class="card">
+      <h2>Budget Planning</h2>
+      <div class="grid">
+        <input id="budgetCategory" placeholder="Category" />
+        <input type="number" id="budgetAmount" placeholder="Budget" />
+        <button onclick="addBudget()">Add Budget</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Budget</th></tr>
+        </thead>
+        <tbody id="budgetList"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Monthly Expense Tracker</h2>
+      <div class="grid">
+        <input id="expenseCategory" placeholder="Category" />
+        <input type="number" id="expenseAmount" placeholder="Amount" />
+        <button onclick="addExpense()">Add Expense</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Amount</th></tr>
+        </thead>
+        <tbody id="expenseList"></tbody>
+      </table>
+      <div class="summary" id="expenseSummary"></div>
+    </div>
+  </div>
+
+  <script>
+    let budgets = JSON.parse(localStorage.getItem('budgets') || '[]');
+    let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+
+    function calculateAllocation() {
+      const income = Number(document.getElementById('income').value);
+      const needs = income * 0.5;
+      const wants = income * 0.3;
+      const savings = income * 0.2;
+
+      document.getElementById('allocation').innerHTML = `
+        <div class="pill">Needs: $${needs.toFixed(2)}</div>
+        <div class="pill">Wants: $${wants.toFixed(2)}</div>
+        <div class="pill">Savings: $${savings.toFixed(2)}</div>
+      `;
+    }
+
+    function addBudget() {
+      const category = document.getElementById('budgetCategory').value;
+      const amount = Number(document.getElementById('budgetAmount').value);
+      if (!category || !amount) return;
+
+      budgets.push({ category, amount });
+      localStorage.setItem('budgets', JSON.stringify(budgets));
+      renderBudgets();
+    }
+
+    function addExpense() {
+      const category = document.getElementById('expenseCategory').value;
+      const amount = Number(document.getElementById('expenseAmount').value);
+      if (!category || !amount) return;
+
+      expenses.push({ category, amount });
+      localStorage.setItem('expenses', JSON.stringify(expenses));
+      if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    renderBills();
+    renderExpenses();
+    }
+
+    function renderBudgets() {
+      document.getElementById('budgetList').innerHTML = budgets.map(item =>
+        `<tr><td>${item.category}</td><td>$${item.amount}</td></tr>`
+      ).join('');
+    }
+
+    function renderExpenses() {
+      document.getElementById('expenseList').innerHTML = expenses.map(item =>
+        `<tr><td>${item.category}</td><td>$${item.amount}</td></tr>`
+      ).join('');
+
+      const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+      document.getElementById('expenseSummary').innerHTML =
+        `<div class="pill">Total Spent: $${total.toFixed(2)}</div>`;
+    }
+
+    renderBudgets();
+    renderExpenses();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let currency = 'USD';
+    let debts = JSON.parse(localStorage.getItem('debts') || '[]');
+    let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+    let subscriptions = JSON.parse(localStorage.getItem('subscriptions') || '[]');
+
+    function formatMoney(value) {
+      const symbols = { USD:'$', IDR:'Rp ', EUR:'€', GBP:'£' };
+      return `${symbols[currency] || ''}${Number(value).toLocaleString()}`;
+    }
+
+    function changeCurrency(el) {
+      currency = el.value;
+      renderBudgets();
+      renderExpenses();
+      renderDebts();
+      renderGoals();
+      renderSubscriptions();
+    }
+
+    function renderAnalytics() {
+      const categories = [...new Set(expenses.map(e => e.category))];
+      const totals = categories.map(cat =>
+        expenses.filter(e => e.category === cat).reduce((a,b)=>a+b.amount,0)
+      );
+
+      const ctx = document.getElementById('expenseChart');
+      if(window.expenseChartInstance) window.expenseChartInstance.destroy();
+      window.expenseChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: categories,
+          datasets: [{ data: totals }]
+        }
+      });
+    }
+
+    function addDebt(){
+      const name = prompt('Debt name');
+      const amount = Number(prompt('Remaining balance'));
+      if(!name || !amount) return;
+      debts.push({name, amount});
+      localStorage.setItem('debts', JSON.stringify(debts));
+      renderDebts();
+    }
+
+    function addGoal(){
+      const name = prompt('Goal name');
+      const amount = Number(prompt('Target amount'));
+      if(!name || !amount) return;
+      goals.push({name, amount, saved:0});
+      localStorage.setItem('goals', JSON.stringify(goals));
+      renderGoals();
+    }
+
+    function addSubscription(){
+      const name = prompt('Subscription name');
+      const amount = Number(prompt('Monthly cost'));
+      if(!name || !amount) return;
+      subscriptions.push({name, amount});
+      localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
+      renderSubscriptions();
+    }
+
+    function renderDebts(){}
+    function renderGoals(){}
+    let bills = JSON.parse(localStorage.getItem('bills') || '[]');
+
+    function addBill(){
+      const name = prompt('Bill name');
+      const dueDate = prompt('Due date (e.g. 15)');
+      if(!name || !dueDate) return;
+      bills.push({name, dueDate});
+      localStorage.setItem('bills', JSON.stringify(bills));
+      renderBills();
+    }
+
+    function renderBills(){
+      document.getElementById('billList').innerHTML = bills.map(b =>
+        `<div class="pill">${b.name} — Due on ${b.dueDate}</div>`
+      ).join('');
+    }
+
+    function renderSubscriptions(){}
+
+    function toggleTheme(){
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    const extraSections = document.createElement('div');
+    extraSections.innerHTML = `
+      <div class="card">
+        <h2>Settings & Analytics</h2>
+        <div class="grid">
+          <select onchange="changeCurrency(this)">
+            <option>USD</option>
+            <option>IDR</option>
+            <option>EUR</option>
+            <option>GBP</option>
+          </select>
+        </div>
+        <canvas id="expenseChart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>Debt Tracker</h2>
+        <button onclick="addDebt()">Add Debt</button>
+        <div id="debtList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Savings Goals</h2>
+        <button onclick="addGoal()">Add Goal</button>
+        <div id="goalList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Bill Due Reminders</h2>
+        <button onclick="addBill()">Add Bill</button>
+        <div id="billList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Subscriptions</h2>
+        <button onclick="addSubscription()">Add Subscription</button>
+        <div id="subscriptionList"></div>
+      </div>
+    `;
+    document.querySelector('.container').appendChild(extraSections);
+
+    const oldRenderExpenses = renderExpenses;
+    renderExpenses = function(){
+      oldRenderExpenses();
+      renderAnalytics();
+    }
+  </script>
+  <script>
+    function showInstallGuide() {
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        alert('To install: Tap Share → Add to Home Screen');
+      }
+    }
+    showInstallGuide();
+  </script>
+</body>
+</html>
